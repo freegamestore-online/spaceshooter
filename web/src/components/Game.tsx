@@ -1,9 +1,12 @@
 import { useRef, useEffect } from "react";
+import { useGameSounds } from "@freegamestore/games";
 import Phaser from "phaser";
 
 interface GameProps {
   onScore: (score: number) => void;
   onGameOver: () => void;
+  onLives: (lives: number) => void;
+  paused?: boolean;
 }
 
 const PLAYER_SPEED = 300;
@@ -31,7 +34,6 @@ class ShooterScene extends Phaser.Scene {
   private elapsedTime = 0;
   private spawnTimer = 0;
   private invincibleUntil = 0;
-  private livesText!: Phaser.GameObjects.Text;
   private touchMoving = false;
   private touchTargetX = 0;
   private touchTargetY = 0;
@@ -343,8 +345,9 @@ class ShooterScene extends Phaser.Scene {
   }
 }
 
-export function Game({ onScore, onGameOver }: GameProps) {
+export function Game({ onScore, onGameOver, paused }: GameProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const gameRef = useRef<Phaser.Game | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -378,6 +381,8 @@ export function Game({ onScore, onGameOver }: GameProps) {
       },
     });
 
+    gameRef.current = game;
+
     // Listen for events from the scene
     game.events.on("ready", () => {
       const scene = game.scene.getScene("ShooterScene");
@@ -399,9 +404,22 @@ export function Game({ onScore, onGameOver }: GameProps) {
 
     return () => {
       clearInterval(interval);
+      gameRef.current = null;
       game.destroy(true);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const game = gameRef.current;
+    if (!game) return;
+    const scene = game.scene.getScene("ShooterScene");
+    if (!scene) return;
+    if (paused) {
+      game.scene.pause("ShooterScene");
+    } else {
+      game.scene.resume("ShooterScene");
+    }
+  }, [paused]);
 
   return (
     <div

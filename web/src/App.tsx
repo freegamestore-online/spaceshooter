@@ -15,6 +15,8 @@ export default function App() {
   const [phase, setPhase] = useState<GamePhase>("playing");
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(getBestScore);
+  const [paused, setPaused] = useState(false);
+  const [lives, setLives] = useState(3);
   const scoreRef = useRef(0);
   const { submitScore } = useLeaderboard("spaceshooter");
 
@@ -34,9 +36,14 @@ export default function App() {
     setPhase("over");
   }, [submitScore]);
 
+  const handleLives = useCallback((l: number) => {
+    setLives(l);
+  }, []);
+
   const start = useCallback(() => {
     setScore(0);
     scoreRef.current = 0;
+    setLives(3);
     setPhase("playing");
   }, []);
 
@@ -58,7 +65,11 @@ export default function App() {
           stats={[
             { label: "Score", value: score, accent: true },
             { label: "Best", value: bestScore },
+            { label: "Lives", value: "\u2665".repeat(lives) },
           ]}
+          onPlayPause={phase === "playing" ? () => setPaused(p => !p) : undefined}
+          paused={paused}
+          onRestart={start}
           actions={<GameAuth />}
           rules={<div><h3 style={{fontWeight:700}}>Space Shooter</h3><h4 style={{fontWeight:600}}>Controls</h4><ul><li>Arrow keys or touch to move</li><li>Auto-fire or tap to shoot</li></ul><h4 style={{fontWeight:600}}>Rules</h4><ul><li>Fly your ship, shoot enemies</li><li>Enemies get harder over time</li><li>Score for each kill</li></ul></div>}
         />
@@ -66,7 +77,7 @@ export default function App() {
     >
       <div className="relative w-full h-full">
         {phase === "playing" ? (
-          <Game onScore={handleScore} onGameOver={handleGameOver} />
+          <Game onScore={handleScore} onGameOver={handleGameOver} onLives={handleLives} paused={paused} />
         ) : (
           <div className="flex flex-col items-center justify-center h-full gap-4">
             <p className="text-xl font-bold" style={{ color: "var(--error)", fontFamily: "Fraunces, serif" }}>Game Over! Score: {score}</p>
