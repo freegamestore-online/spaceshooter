@@ -12,7 +12,7 @@ function getBestScore(): number {
 }
 
 export default function App() {
-  const [phase, setPhase] = useState<GamePhase>("menu");
+  const [phase, setPhase] = useState<GamePhase>("playing");
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(getBestScore);
   const scoreRef = useRef(0);
@@ -69,13 +69,9 @@ export default function App() {
           <Game onScore={handleScore} onGameOver={handleGameOver} />
         ) : (
           <div className="flex flex-col items-center justify-center h-full gap-4">
-            <h1 className="text-4xl font-bold" style={{ fontFamily: "Fraunces, serif" }}>Space Shooter</h1>
-            {phase === "over" && (
-              <p className="text-xl font-bold" style={{ color: "var(--error)", fontFamily: "Fraunces, serif" }}>Game Over! Score: {score}</p>
-            )}
-            <p style={{ color: "var(--muted)" }}>Destroy enemies. Arrow keys or touch to move, Space to shoot.</p>
+            <p className="text-xl font-bold" style={{ color: "var(--error)", fontFamily: "Fraunces, serif" }}>Game Over! Score: {score}</p>
             <button onClick={start} className="px-6 py-3 rounded-xl font-semibold" style={{ background: "var(--accent)", color: "#fff" }}>
-              {phase === "menu" ? "Start Game" : "Play Again"}
+              Play Again
             </button>
             <p className="text-xs" style={{ color: "var(--muted)" }}>Press Space or Enter to start</p>
           </div>
