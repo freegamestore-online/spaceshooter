@@ -116,6 +116,7 @@ class ShooterScene extends Phaser.Scene {
         enemy.disableBody(true, true);
         this.score += 10;
         this.events.emit("score", this.score);
+        this.events.emit("enemyKill");
 
         // Small explosion particles
         for (let i = 0; i < 6; i++) {
@@ -150,7 +151,8 @@ class ShooterScene extends Phaser.Scene {
         const enemy = _enemyObj as Phaser.Physics.Arcade.Sprite;
         enemy.disableBody(true, true);
         this.lives--;
-        this.updateLivesText();
+        this.events.emit("lives", this.lives);
+        this.events.emit("hit");
 
         if (this.lives <= 0) {
           this.gameOver = true;
@@ -204,13 +206,6 @@ class ShooterScene extends Phaser.Scene {
       this.touchMoving = false;
     });
 
-    // --- Lives display ---
-    this.livesText = this.add.text(10, 10, "", {
-      fontSize: "14px",
-      color: "#ef4444",
-    }).setDepth(20);
-    this.updateLivesText();
-
     // --- Set background ---
     this.cameras.main.setBackgroundColor(0x0a0a1a);
 
@@ -218,11 +213,6 @@ class ShooterScene extends Phaser.Scene {
     this.scale.on("resize", (gameSize: Phaser.Structs.Size) => {
       this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
     });
-  }
-
-  private updateLivesText() {
-    const hearts = Array.from({ length: this.lives }, () => "♥").join(" ");
-    this.livesText.setText(hearts);
   }
 
   private fireBullet() {
@@ -345,9 +335,10 @@ class ShooterScene extends Phaser.Scene {
   }
 }
 
-export function Game({ onScore, onGameOver, paused }: GameProps) {
+export function Game({ onScore, onGameOver, onLives, paused }: GameProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
+  const sounds = useGameSounds();
 
   useEffect(() => {
     const container = containerRef.current;
@@ -355,8 +346,12 @@ export function Game({ onScore, onGameOver, paused }: GameProps) {
 
     const onScoreRef = { current: onScore };
     const onGameOverRef = { current: onGameOver };
+    const onLivesRef = { current: onLives };
+    const soundsRef = { current: sounds };
     onScoreRef.current = onScore;
     onGameOverRef.current = onGameOver;
+    onLivesRef.current = onLives;
+    soundsRef.current = sounds;
 
     const game = new Phaser.Game({
       type: Phaser.AUTO,
@@ -391,7 +386,17 @@ export function Game({ onScore, onGameOver, paused }: GameProps) {
           onScoreRef.current(s);
         });
         scene.events.on("gameover", () => {
+          soundsRef.current.playGameOver();
           onGameOverRef.current();
+        });
+        scene.events.on("lives", (l: number) => {
+          onLivesRef.current(l);
+        });
+        scene.events.on("enemyKill", () => {
+          soundsRef.current.playScore();
+        });
+        scene.events.on("hit", () => {
+          soundsRef.current.playError();
         });
       }
     });
@@ -400,6 +405,8 @@ export function Game({ onScore, onGameOver, paused }: GameProps) {
     const interval = setInterval(() => {
       onScoreRef.current = onScore;
       onGameOverRef.current = onGameOver;
+      onLivesRef.current = onLives;
+      soundsRef.current = sounds;
     }, 100);
 
     return () => {
