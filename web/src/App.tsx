@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { GameShell, GameTopbar, GameAuth } from "@freegamestore/games";
+import { GameShell, GameTopbar, GameAuth, useLeaderboard } from "@freegamestore/games";
 import { Game } from "./components/Game";
-import { useLeaderboard } from '@freegamestore/games';
 import type { GamePhase } from "./types";
 
 const BEST_SCORE_KEY = "freespace-best";
@@ -85,7 +84,7 @@ export default function App() {
           <Game key={gameKey} onScore={handleScore} onGameOver={handleGameOver} onLives={handleLives} paused={paused} />
         ) : (
           <div className="flex flex-col items-center justify-center h-full gap-4">
-            <p className="text-xl font-bold" style={{ color: "var(--error)", fontFamily: "Fraunces, serif" }}>Game Over! Score: {score}</p>
+            <p className="text-xl font-bold" style={{ color: "var(--danger)", fontFamily: "Fraunces, serif" }}>Game Over! Score: {score}</p>
             <button onClick={start} className="px-6 py-3 rounded-xl font-semibold" style={{ background: "var(--accent)", color: "#fff" }}>
               Play Again
             </button>

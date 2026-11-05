@@ -312,14 +312,8 @@ class ShooterScene extends Phaser.Scene {
       firing = true;
     }
 
-    // Keyboard auto-fire or space
-    if (firing || moveLeft || moveRight || moveUp || moveDown) {
-      if (firing) this.fireBullet();
-    }
-    // Also fire on space even when not moving
-    if (this.spaceKey && this.spaceKey.isDown) {
-      this.fireBullet();
-    }
+    // Space (keyboard) or a finger down (touch)
+    if (firing) this.fireBullet();
 
     // --- Remove off-screen bullets ---
     this.bullets.getChildren().forEach((b) => {

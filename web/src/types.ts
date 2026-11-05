@@ -1,1 +1,1 @@
-export type GamePhase = "menu" | "playing" | "over";
+export type GamePhase = "playing" | "over";
