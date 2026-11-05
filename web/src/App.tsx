@@ -17,6 +17,9 @@ export default function App() {
   const [bestScore, setBestScore] = useState(getBestScore);
   const [paused, setPaused] = useState(false);
   const [lives, setLives] = useState(3);
+  // Bumped on every start so Restart remounts <Game> (a fresh Phaser scene)
+  // even when the phase is already "playing".
+  const [gameKey, setGameKey] = useState(0);
   const scoreRef = useRef(0);
   const { submitScore } = useLeaderboard("spaceshooter");
 
@@ -44,6 +47,8 @@ export default function App() {
     setScore(0);
     scoreRef.current = 0;
     setLives(3);
+    setPaused(false);
+    setGameKey((k) => k + 1);
     setPhase("playing");
   }, []);
 
@@ -77,7 +82,7 @@ export default function App() {
     >
       <div className="relative w-full h-full">
         {phase === "playing" ? (
-          <Game onScore={handleScore} onGameOver={handleGameOver} onLives={handleLives} paused={paused} />
+          <Game key={gameKey} onScore={handleScore} onGameOver={handleGameOver} onLives={handleLives} paused={paused} />
         ) : (
           <div className="flex flex-col items-center justify-center h-full gap-4">
             <p className="text-xl font-bold" style={{ color: "var(--error)", fontFamily: "Fraunces, serif" }}>Game Over! Score: {score}</p>

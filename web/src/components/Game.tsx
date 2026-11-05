@@ -232,7 +232,9 @@ class ShooterScene extends Phaser.Scene {
   private spawnEnemy() {
     const { width } = this.scale;
     const x = Phaser.Math.Between(20, width - 20);
-    const enemy = this.enemies.create(x, -20, "enemy") as Phaser.Physics.Arcade.Sprite;
+    // Reuse a disabled enemy from the group pool (create() always adds a new sprite).
+    const enemy = this.enemies.get(x, -20, "enemy") as Phaser.Physics.Arcade.Sprite;
+    enemy.enableBody(true, x, -20, true, true);
     const currentSpeed = Math.min(
       ENEMY_MAX_SPEED,
       ENEMY_BASE_SPEED + this.elapsedTime * ENEMY_SPEED_RAMP,
@@ -338,20 +340,21 @@ class ShooterScene extends Phaser.Scene {
 export function Game({ onScore, onGameOver, onLives, paused }: GameProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
+  // The Phaser scene is created once; it reads the latest props and sounds
+  // (mute state) through refs written on every render.
   const sounds = useGameSounds();
+  const soundsRef = useRef(sounds);
+  const onScoreRef = useRef(onScore);
+  const onGameOverRef = useRef(onGameOver);
+  const onLivesRef = useRef(onLives);
+  soundsRef.current = sounds;
+  onScoreRef.current = onScore;
+  onGameOverRef.current = onGameOver;
+  onLivesRef.current = onLives;
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
-    const onScoreRef = { current: onScore };
-    const onGameOverRef = { current: onGameOver };
-    const onLivesRef = { current: onLives };
-    const soundsRef = { current: sounds };
-    onScoreRef.current = onScore;
-    onGameOverRef.current = onGameOver;
-    onLivesRef.current = onLives;
-    soundsRef.current = sounds;
 
     const game = new Phaser.Game({
       type: Phaser.AUTO,
@@ -401,16 +404,7 @@ export function Game({ onScore, onGameOver, onLives, paused }: GameProps) {
       }
     });
 
-    // Update refs when props change
-    const interval = setInterval(() => {
-      onScoreRef.current = onScore;
-      onGameOverRef.current = onGameOver;
-      onLivesRef.current = onLives;
-      soundsRef.current = sounds;
-    }, 100);
-
     return () => {
-      clearInterval(interval);
       gameRef.current = null;
       game.destroy(true);
     };
