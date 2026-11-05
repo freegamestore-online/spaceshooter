@@ -76,7 +76,7 @@ export default function App() {
           paused={paused}
           onRestart={start}
           actions={<GameAuth />}
-          rules={<div><h3 style={{fontWeight:700}}>Space Shooter</h3><h4 style={{fontWeight:600}}>Controls</h4><ul><li>Arrow keys or touch to move</li><li>Auto-fire or tap to shoot</li></ul><h4 style={{fontWeight:600}}>Rules</h4><ul><li>Fly your ship, shoot enemies</li><li>Enemies get harder over time</li><li>Score for each kill</li></ul></div>}
+          rules={<div><h3 style={{fontWeight:700}}>Space Shooter</h3><h4 style={{fontWeight:600}}>Controls</h4><ul><li>Keyboard: arrow keys or WASD to move, hold Space to fire</li><li>Touch: drag to steer; the ship fires automatically while your finger is down</li></ul><h4 style={{fontWeight:600}}>Rules</h4><ul><li>Fly your ship, shoot enemies</li><li>Enemies get harder over time</li><li>Score for each kill</li></ul></div>}
         />
       }
     >

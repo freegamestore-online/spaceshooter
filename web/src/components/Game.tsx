@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import { useGameSounds } from "@freegamestore/games";
 import Phaser from "phaser";
+import { rescale, type Size } from "./rescale";
 
 interface GameProps {
   onScore: (score: number) => void;
@@ -38,6 +39,8 @@ class ShooterScene extends Phaser.Scene {
   private touchTargetX = 0;
   private touchTargetY = 0;
   private gameOver = false;
+  private stars: Phaser.GameObjects.Image[] = [];
+  private size: Size = { width: 0, height: 0 };
 
   constructor() {
     super("ShooterScene");
@@ -45,6 +48,7 @@ class ShooterScene extends Phaser.Scene {
 
   create() {
     const { width, height } = this.scale;
+    this.size = { width, height };
 
     // --- Generate textures with graphics ---
     // Player ship (triangle pointing up)
@@ -88,6 +92,7 @@ class ShooterScene extends Phaser.Scene {
       );
       star.setAlpha(Phaser.Math.FloatBetween(0.2, 0.8));
       star.setData("speed", Phaser.Math.Between(20, 80));
+      this.stars.push(star);
     }
 
     // --- Player ---
@@ -210,8 +215,19 @@ class ShooterScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(0x0a0a1a);
 
     // --- Handle resize ---
+    // Arcade physics keeps its creation-time world bounds, so update them
+    // (the ship collides with them), keep the ship on screen, and spread
+    // the stars over the new field.
     this.scale.on("resize", (gameSize: Phaser.Structs.Size) => {
-      this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
+      const next = { width: gameSize.width, height: gameSize.height };
+      this.cameras.main.setViewport(0, 0, next.width, next.height);
+      this.physics.world.setBounds(0, 0, next.width, next.height);
+      rescale(this.stars, this.size, next);
+      this.player.setPosition(
+        Phaser.Math.Clamp(this.player.x, 0, next.width),
+        Phaser.Math.Clamp(this.player.y, 0, next.height),
+      );
+      this.size = next;
     });
   }
 
@@ -251,16 +267,13 @@ class ShooterScene extends Phaser.Scene {
     this.elapsedTime += dt;
 
     // --- Move background stars ---
-    this.children.getAll().forEach((child) => {
-      if (child.getData("speed")) {
-        const star = child as Phaser.GameObjects.Image;
-        star.y += star.getData("speed") as number * dt;
-        if (star.y > this.scale.height) {
-          star.y = 0;
-          star.x = Phaser.Math.Between(0, this.scale.width);
-        }
+    for (const star of this.stars) {
+      star.y += (star.getData("speed") as number) * dt;
+      if (star.y > this.scale.height) {
+        star.y = 0;
+        star.x = Phaser.Math.Between(0, this.scale.width);
       }
-    });
+    }
 
     // --- Player movement ---
     const body = this.player.body as Phaser.Physics.Arcade.Body;
@@ -423,10 +436,6 @@ export function Game({ onScore, onGameOver, onLives, paused }: GameProps) {
   }, [paused]);
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-full"
-      style={{ minHeight: "400px" }}
-    />
+    <div ref={containerRef} className="w-full h-full" />
   );
 }
